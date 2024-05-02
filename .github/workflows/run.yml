@@ -32,7 +32,7 @@ jobs:
         shell: bash
 
       - name: Checkout the default branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Make directory
         run: |
@@ -117,7 +117,7 @@ jobs:
           mv ruleset ./publish/
 
       - name: Release and upload assets
-        uses: softprops/action-gh-release@v0.1.6
+        uses: softprops/action-gh-release@v2
         with:
           name: ${{ env.RELEASE_NAME }}
           tag_name: ${{ env.TAG_NAME }}
@@ -139,3 +139,13 @@ jobs:
           git commit -m "${{ env.RELEASE_NAME }}"
           git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
           git push -f -u origin release
+
+      - name: Purge jsdelivr CDN
+        run: |
+          cd publish || exit 1
+          for file in $(ls); do
+            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
+          done
+          for file in $(ls ruleset); do
+            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/ruleset/${file}"
+          done
